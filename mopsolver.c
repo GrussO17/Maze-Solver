@@ -101,36 +101,67 @@ int breadthFirst(int size, int rows, int maze[][size], int visited[][size]){
 	return pS;
 }
 
-void depthSearch(int size, int rows, int maze[][size], int visited[][size],
+void depthSearch(int cols, int rows, int maze[][cols], int visited[][cols],
 	 int x, int y, int *done){
-	printf(" x = %d, y = %d\n", x, y);
-	
-	if(x == size-1 && y == rows - 1){
+	for(int a = 0; a < rows; a++){
+                 for(int b = 0; b < cols; b++){
+                           printf("%d ", maze[a][b]);
+                  }
+                  printf("\n");
+          }
+	printf(" x = %d, y = %d, done = %d\n", x, y, *done);
+	printf("maze = %d\n", maze[x][y]);	
+	if(x == cols-1 && y == rows - 1){
 		*done = 1;
 	}
 	else if(*done == 0){
 		visited[x][y] = 1;
-		if(x != 0 && visited[x - 1][y] != 1)
-			depthSearch(size, rows, maze, visited, x - 1, y, done);
-		if(y != 0 && visited[x][y - 1] != 1)
-		        depthSearch(size, rows, maze, visited, x, y - 1, done);
-		if(x != size -1  && visited[x + 1][y] != 1)
-			depthSearch(size, rows, maze, visited, x + 1, y, done);
-		if(y != size -1  && visited[x][y + 1] != 1)
-			depthSearch(size, rows, maze, visited, x, y + 1, done);
+		if(x != 0 && visited[x - 1][y] != 1 && maze[x-1][y] != 1)
+			depthSearch(cols, rows, maze, visited, x - 1, y, done);
+		if(y != 0 && visited[x][y - 1] != 1 && maze[x][y-1] != 1)
+		        depthSearch(cols, rows, maze, visited, x, y - 1, done);
+		if(x != cols -1 && visited[x + 1][y] != 1 && maze[x + 1][y] != 1)
+			depthSearch(cols, rows, maze, visited, x + 1, y, done);
+		if(y != rows -1 && visited[x][y + 1] != 1 && maze[x][y+1] != 1)
+			depthSearch(cols, rows, maze, visited, x, y + 1, done);
 	}	
 }
-int** convertArray(char* input, int size){
-	int width;
+void getSizes(char* input, int size, int* rows, int* cols){
 	for(int a = 0; a < size; a++){
-		if(input[a] == '\n'){
-			width = a;
-			break;
+                if(input[a] == '\n'){
+                       *cols = a;
+                       break;
+                }
+        }
+        int counter = 0;
+        for(int a = 0; a < size; a++)
+                if(input[a] != '\n')
+                        counter++;
+        *rows = counter/(*cols);
+	return;
+}
+void convertArray(char* input, int rows, int cols, int ret[][cols]){
+	int counter = 0;
+	for( int row = 0; row < rows; row++){
+		for(int col = 0; col < cols; col++){
+			if(input[counter] != '\n'){
+				ret[row][col] = (int)input[counter] - '0';
+			}
+			else
+				col--;
+			counter++;
+			
 		}
 	}
-	
+	printf("rows = %d, cols = %d\n", rows, cols);
+	for(int a = 0; a < rows; a++){
+               for(int b = 0; b < cols; b++){
+                         printf("%d ", ret[a][b]);
+                }
+                printf("\n");
+        }
 
-
+	return ret;
 }
 
 char* makeArray(FILE* pfile, int* size){
@@ -147,50 +178,14 @@ char* makeArray(FILE* pfile, int* size){
 			ret = realloc(ret, sizeof(char)* space + 10);
 			space = space + 10;
 		}
-	printf("%d   %c\n", count, character);
+		printf("%d   %c\n", count, character);
 	}
 	*size = count;
 	return ret;
 }
 
-int** readFile(FILE* pfile, int* returnCols, int* returnRows){
-	FILE* temp = pfile;
-	int counter = -1;
-	char character = 'a';
-	while( character != '\n'){
-		fscanf(temp, "%c", &character);
-		counter++;
-	}
-	printf(" width %d", counter);
-	int size = counter;
-	int** ret;
-	ret = (int**)malloc(sizeof(int) * size);
-	char next;
-	next = 'a';
-	int numrows = 1;
-	int num = 0;
-	for( int j = 0; next != EOF; j++){
-		numrows ++;
-		if( j != 0 ){
-		       ret = (int**)realloc(ret, sizeof(int) 
-			* (size) * numrows); 
-		}
-		for( int i = 0; i < size; i++){
-			fscanf( pfile, "%i", &num);
-			ret[j][i] = num;
-			printf("%d\n", num);
-		}
-		fscanf(pfile, "%c", &next);
-	}
-	*returnCols = size;
-	*returnRows = numrows;
-	return ret;
-}
-
 int main(int argc, char ** argv){
 	
-	int* returnCols = 1;
-	int* returnRows = 1;
 	if(argc != 2) 
 		return EXIT_FAILURE;
 	FILE* pFile = fopen(argv[1], "r");
@@ -205,8 +200,21 @@ int main(int argc, char ** argv){
 	depthSearch(*returnCols, *returnRows, maze, visited, 0, 0, &canComplete);
 	printf("can be complete? %d", canComplete);
 	*/
-	int* size;
-	char* file = makeArray(pFile, size);
-	for(int a = 0; a < *size; a++)
+	int size;
+	char* file = makeArray(pFile, &size);
+	for(int a = 0; a < size; a++)
 		printf("%c", file[a]);
+	int rows;
+	int cols;
+	getSizes(file, size, &rows, &cols);
+	int maze[rows][cols];
+	convertArray(file, rows, cols, maze);
+	int visited[rows][cols];
+	for( int a = 0; a < rows; a++)
+                for(int b = 0; b < cols; b++)
+                        visited[a][b] = 0;
+        int canComplete = 0;
+	depthSearch(cols, rows, maze, visited, 0, 0, &canComplete);
+	printf("%d", canComplete);
+	return EXIT_SUCCESS;
 }
