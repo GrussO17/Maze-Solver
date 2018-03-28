@@ -13,60 +13,45 @@
 
 typedef struct qnode{
 	int pathSize;
+	int** visited;
 	size_t x;     // using separate x/y coordinates
 	size_t y;
 } QNode;
-/**
-void enqueue(QNode* que, size_t x, size_t y, int pS ){
-	QNode* add = malloc(sizeof(QNode));
-	QNode* current = que;
-	while(current->next != NULL){
-		current = current->next;
-	}
-	current->next = add;
-	add->x = x;
-	add->y = y;
-	add->pathSize = pS;
-	add->next = NULL;
-}
 
-QNode* dequeue(QNode* que){
-	QNode* ret = que;
-	que = ret->next;
-	return ret;
-}
-
-void destroy(QNode* que){
-	if(que->next != NULL)
-		destroy(que->next);
-	free(que);
-}
-*/
 int breadthFirst(int size, int rows, int maze[][size], int visited[][size]){
 	QueueADT que = que_create(NULL);
 	QNode* start = malloc(sizeof(QNode));
 	start->x = 0;
 	start->y = 0;
-	start->pathSize = 1;
+	start->pathSize = 0;
+	visited[0][0] = 1;
 	que_insert(que, start);
 	QNode* temp;
-	int x;
+	int x = start->x;
 	int y;
 	int pS;
-	do{
-		printf(" x = %d, y = %d pS = %d\n", x, y, pS);
-		temp = que_remove(que);
+	while(x !=  size - 1 ||  y != rows - 1){
+		printf("Before x = %d, y = %d pS = %d\n", x, y, pS);
+		printf("Before maze = %d, visited = %d\n", maze[x][y], visited[x][y]);
+		if(!que_empty(que))
+			temp = que_remove(que);
+		else{
+			printf("no solution");
+			break;
+		}
 		x = (int)temp->x;
 		y = (int)temp->y;
 		pS = temp->pathSize;
 		//free(temp);
+		printf("After x = %d, y = %d pS = %d\n", x, y, pS);
+		printf("After maze = %d, visited = %d\n", maze[x][y], visited[x][y]);
 		if(x != 0 && maze[y][x - 1] == OPEN && 
 		visited[y][x - 1] != 1){
 			visited[y][x - 1] = 1;
 			QNode* add = malloc(sizeof(QNode));
 			add->x = x - 1;
        			add->y = y;
-        		add->pathSize = pS++;
+        		add->pathSize = pS + 1;
 			que_insert(que, add);
 		}
 		if(x != size-1 && maze[y][x + 1] == OPEN && 
@@ -75,7 +60,7 @@ int breadthFirst(int size, int rows, int maze[][size], int visited[][size]){
 			QNode* add = malloc(sizeof(QNode));
                         add->x = x + 1;
                         add->y = y;
-                        add->pathSize = pS++;
+                        add->pathSize = pS + 1;
                         que_insert(que, add); 
  		}
 		if(y != 0 && maze[y - 1][x] == OPEN &&
@@ -84,7 +69,7 @@ int breadthFirst(int size, int rows, int maze[][size], int visited[][size]){
 			QNode* add = malloc(sizeof(QNode));
                         add->x = x;
                         add->y = y - 1;
-                        add->pathSize = pS++;
+                        add->pathSize = pS + 1;
                         que_insert(que, add);
                 }
 		if(y != rows-1 && maze[y + 1][x] == OPEN &&
@@ -93,22 +78,16 @@ int breadthFirst(int size, int rows, int maze[][size], int visited[][size]){
 			QNode* add = malloc(sizeof(QNode));
                         add->x = x;
                         add->y = y + 1;
-                        add->pathSize = pS++;
+                        add->pathSize = pS + 1;
                         que_insert(que, add);
                 }
-	}while(!(x ==  size - 1) || !(y == rows - 1));
+	}
 	printf(" x = %d, y = %d\n pS = %d\n", x, y, pS);
 	return pS;
 }
 
 void depthSearch(int cols, int rows, int maze[][cols], int visited[][cols],
 	 int x, int y, int *done){
-	for(int a = 0; a < rows; a++){
-                 for(int b = 0; b < cols; b++){
-                           printf("%d ", maze[a][b]);
-                  }
-                  printf("\n");
-          }
 	printf(" x = %d, y = %d, done = %d\n", x, y, *done);
 	printf("maze = %d\n", maze[x][y]);	
 	if(x == cols-1 && y == rows - 1){
@@ -164,6 +143,30 @@ void convertArray(char* input, int rows, int cols, int ret[][cols]){
 	return ret;
 }
 
+void printPrettyMaze(int rows, int cols, int maze[][cols]){
+	printf("\n");
+	for(int a = 0; a <= cols; a ++)
+		printf("oo");
+	printf("\n");
+	for(int row = 0; row < rows; row++){
+		if(row != 0)
+			printf("o");
+		else
+			printf(" ");
+		for(int col = 0; col < cols; col++){
+			if( maze[row][col] == 1)
+				printf(" %d", maze[row][col]);
+			else
+				printf("  ");
+		}	
+		if(row != rows - 1)
+			printf(" o");
+		printf("\n");
+	}
+	for(int a = 0; a <= cols; a ++)
+                printf("oo");
+}
+
 char* makeArray(FILE* pfile, int* size){
 	char character;
 	char* ret = malloc(sizeof(char) * 10);
@@ -189,17 +192,6 @@ int main(int argc, char ** argv){
 	if(argc != 2) 
 		return EXIT_FAILURE;
 	FILE* pFile = fopen(argv[1], "r");
-	/**
-	int** maze = readFile(pFile, returnCols, returnRows);
-	char* file = makeArray( );
-	int visited[*returnRows][*returnCols];
-	for( int a = 0; a < returnRows; a++)
-		for(int b = 0; b < returnCols; b++)
-			visited[a][b] = 0;
-	int canComplete;
-	depthSearch(*returnCols, *returnRows, maze, visited, 0, 0, &canComplete);
-	printf("can be complete? %d", canComplete);
-	*/
 	int size;
 	char* file = makeArray(pFile, &size);
 	for(int a = 0; a < size; a++)
@@ -216,5 +208,11 @@ int main(int argc, char ** argv){
         int canComplete = 0;
 	depthSearch(cols, rows, maze, visited, 0, 0, &canComplete);
 	printf("%d", canComplete);
+	for( int a = 0; a < rows; a++)
+		for(int b = 0; b < cols; b++)
+			visited[a][b] = 0;
+	canComplete = breadthFirst(cols, rows, maze, visited);
+        printf("%d", canComplete);
+	printPrettyMaze(rows, cols, maze);
 	return EXIT_SUCCESS;
 }
