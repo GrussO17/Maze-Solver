@@ -40,6 +40,7 @@ Coords* breadthFirst(int rows, int cols, int maze[][cols], int visited[][cols], 
 	int y = start->current.y;
 	int pS;
 	int capacity;
+	QNode* add;
 	Coords* path;
 	Coords tempCoord;
 	Coords* tempPath;
@@ -57,11 +58,10 @@ Coords* breadthFirst(int rows, int cols, int maze[][cols], int visited[][cols], 
 		capacity = temp->capacity;
 		path = temp->path;
 		free(temp);
-		//printf("ps = %d, cap = %d\n", pS, capacity);
 		if(x != 0 && maze[y][x - 1] == OPEN && 
 		visited[y][x - 1] != 1){
 			visited[y][x - 1] = 1;
-			QNode* add = malloc(sizeof(QNode));
+			add = malloc(sizeof(QNode));
 			add->current.x = x - 1;
        			add->current.y = y;
         		add->pathSize = pS + 1;
@@ -75,14 +75,12 @@ Coords* breadthFirst(int rows, int cols, int maze[][cols], int visited[][cols], 
 			}
 			tempPath[pS] = tempCoord;
 			add->path = tempPath;
-			//printf("pS = %d, capacity = %d", add->pathSize, add->capacity);
 			que_insert(que, add);
-			free(add);
 		}
 		if(x != cols - 1 && maze[y][x + 1] == OPEN && 
 		visited[y][x + 1] != 1){
 			visited[y][x + 1] = 1;
-			QNode* add = malloc(sizeof(QNode));
+			add = malloc(sizeof(QNode));
                         add->current.x = x + 1;
                         add->current.y = y;
 			tempCoord.x = x + 1;
@@ -97,13 +95,11 @@ Coords* breadthFirst(int rows, int cols, int maze[][cols], int visited[][cols], 
                         add->path = tempPath;
                         add->pathSize = pS + 1;
                         que_insert(que, add);
-			free(add);
-			//printf("pS = %d, capacity = %d", add->pathSize, add->capacity); 
  		}
 		if(y != 0 && maze[y - 1][x] == OPEN &&
                 visited[y - 1][x] != 1){
                         visited[y - 1][x] = 1;
-			QNode* add = malloc(sizeof(QNode));
+			add = malloc(sizeof(QNode));
                         add->current.x = x;
                         add->current.y = y - 1;
                         add->pathSize = pS + 1;
@@ -118,13 +114,11 @@ Coords* breadthFirst(int rows, int cols, int maze[][cols], int visited[][cols], 
 			tempPath[pS] = tempCoord;
                         add->path = tempPath;
                         que_insert(que, add);
-			free(add);
-			//printf("pS = %d, capacity = %d", add->pathSize, add->capacity);
                 }
 		if(y != rows - 1 && maze[y + 1][x] == OPEN &&
                 visited[y + 1][x] != 1){
                         visited[y + 1][x] = 1;
-			QNode* add = malloc(sizeof(QNode));
+			add = malloc(sizeof(QNode));
                         add->current.x = x;
                         add->current.y = y + 1;
                         add->pathSize = pS + 1;
@@ -139,13 +133,15 @@ Coords* breadthFirst(int rows, int cols, int maze[][cols], int visited[][cols], 
 			tempPath[pS] = tempCoord;
                         add->path = tempPath;
                         que_insert(que, add);
-			free(add);
-			//printf("pS = %d, capacity = %d", add->pathSize, add->capacity);
                 }
-		free(path);
+		if(x < cols - 1 ||  y < rows - 1)
+			free(path);
 	}
-	for(int a = 0; a < pS; a++)
-		printf("x %d, y %d\n", path[a].x, path[a].y);
+	while(!que_empty(que)){
+		temp = que_remove(que);
+		free(temp->path);
+		free(temp);
+	}
 	*pathSizeRet = pS;
 	que_destroy(que);
 	return path;
@@ -153,10 +149,6 @@ Coords* breadthFirst(int rows, int cols, int maze[][cols], int visited[][cols], 
 
 void depthSearch(int rows, int cols, int maze[][cols], int visited[][cols],
 	 int x, int y, int *done){
-	printf(" x = %d, y = %d, done = %d\n", x, y, *done);
-	printf("maze = %d\n", maze[x][y]);
-	printPrettyMaze(rows, cols, maze);
-	 printPrettyMaze(rows, cols, visited);
 	if(x == cols - 1 && y == rows - 1){
 		*done = 1;
 	}
@@ -214,12 +206,12 @@ void printPrettySolution(Coords* trail, int rows, int cols, int pathSize){
         for(int a = 0; a <= cols; a ++)
                 printf("oo");
         printf("o\n");
-	for(int row = 0; row < rows; row++){
+	for(size_t row = 0; row < (size_t)rows; row++){
                 if(row != 0)
                         printf("o");
                 else
                         printf(" ");
-                for(int col = 0; col < cols; col++){
+                for(size_t col = 0; col < (size_t)cols; col++){
 			if(row == 0 && col == 0)
 				printf(" x");
 			else
@@ -232,7 +224,7 @@ void printPrettySolution(Coords* trail, int rows, int cols, int pathSize){
 					printf("  ");
 			}
                 }
-                if(row != rows - 1)
+                if(row != (size_t)rows - 1)
                         printf(" o");
                 printf("\n");
         }
@@ -307,8 +299,7 @@ int main(int argc, char ** argv){
 				m = 1;
 			case 'p': 
 				p = 1;
-	}
-	*/
+	}*/
 	int size;
 	printf("%s", argv[2]);
 	FILE* pfile = fopen(argv[1], "r");
@@ -341,5 +332,6 @@ int main(int argc, char ** argv){
 	printf("%d", canComplete);
 	printPrettyMaze(rows, cols, maze);
 	printPrettySolution(path, rows, cols, canComplete);
+	free(path);
 	return EXIT_SUCCESS;
 }
