@@ -23,13 +23,16 @@ typedef struct qnode{
 } QNode;
 
 
-Coords* breadthFirst(int rows, int cols, int const maze[][cols], int visited[][cols], int* pathSizeRet){
+Coords* breadthFirst(int rows, int cols, int maze[][cols], int visited[][cols], int* pathSizeRet){
 	QueueADT que = que_create(NULL);
 	QNode* start = malloc(sizeof(QNode));
 	start->current.x = 0;
 	start->current.y = 0;
-	start->path = malloc(sizeof(Coords) * 5);
+	start->path = malloc(sizeof(Coords) * 1);
+	start->path[0].x = 0;
+	start->path[0].y = 0;
 	start->pathSize = 0;
+	start->capacity = 1;
 	visited[0][0] = 1;
 	que_insert(que, start);
 	QNode* temp;
@@ -39,10 +42,9 @@ Coords* breadthFirst(int rows, int cols, int const maze[][cols], int visited[][c
 	int capacity;
 	Coords* path;
 	Coords tempCoord;
+	Coords* tempPath;
 	printf("COLS = %d, ROWS = %d\n", cols, rows);
 	while(x < cols - 1 ||  y < rows - 1){
-		printf("Before x = %d, y = %d pS = %d\n", x, y, pS);
-		printf("Before maze = %d, visited = %d\n", maze[x][y], visited[x][y]);
 		if(!que_empty(que))
 			temp = que_remove(que);
 		else{
@@ -54,11 +56,8 @@ Coords* breadthFirst(int rows, int cols, int const maze[][cols], int visited[][c
 		pS = temp->pathSize;
 		capacity = temp->capacity;
 		path = temp->path;
-		if(capacity == pS - 1){
-			printf("Reallocating....");
-			temp = realloc(path, sizeof(Coords)*(capacity + 5));
-			capacity = capacity + 5;
-		}
+		free(temp);
+		//printf("ps = %d, cap = %d\n", pS, capacity);
 		if(x != 0 && maze[y][x - 1] == OPEN && 
 		visited[y][x - 1] != 1){
 			visited[y][x - 1] = 1;
@@ -66,11 +65,19 @@ Coords* breadthFirst(int rows, int cols, int const maze[][cols], int visited[][c
 			add->current.x = x - 1;
        			add->current.y = y;
         		add->pathSize = pS + 1;
+			add->capacity = capacity + 1;
 			tempCoord.x = x - 1;
 			tempCoord.y = y;
-			path[pS] = tempCoord;
-			add->path = path;
+			tempPath = malloc(sizeof(Coords) * add->capacity);
+			for(int a = 0; a < capacity; a++){
+				tempPath[a].x = path[a].x;
+				tempPath[a].y = path[a].y;
+			}
+			tempPath[pS] = tempCoord;
+			add->path = tempPath;
+			//printf("pS = %d, capacity = %d", add->pathSize, add->capacity);
 			que_insert(que, add);
+			free(add);
 		}
 		if(x != cols - 1 && maze[y][x + 1] == OPEN && 
 		visited[y][x + 1] != 1){
@@ -80,10 +87,18 @@ Coords* breadthFirst(int rows, int cols, int const maze[][cols], int visited[][c
                         add->current.y = y;
 			tempCoord.x = x + 1;
                         tempCoord.y = y;
-                        path[pS] = tempCoord;
-                        add->path = path;
+			add->capacity = capacity + 1;
+                        tempPath = malloc(sizeof(Coords) * add->capacity);
+                        for(int a = 0; a < capacity; a++){
+                                tempPath[a].x = path[a].x;
+                                tempPath[a].y = path[a].y;
+                        }
+			tempPath[pS] = tempCoord;
+                        add->path = tempPath;
                         add->pathSize = pS + 1;
-                        que_insert(que, add); 
+                        que_insert(que, add);
+			free(add);
+			//printf("pS = %d, capacity = %d", add->pathSize, add->capacity); 
  		}
 		if(y != 0 && maze[y - 1][x] == OPEN &&
                 visited[y - 1][x] != 1){
@@ -94,9 +109,17 @@ Coords* breadthFirst(int rows, int cols, int const maze[][cols], int visited[][c
                         add->pathSize = pS + 1;
 			tempCoord.x = x;
                         tempCoord.y = y - 1;
-                        path[pS] = tempCoord;
-                        add->path = path;
+			add->capacity = capacity + 1;
+                       	tempPath = malloc(sizeof(Coords) * add->capacity);
+                        for(int a = 0; a < capacity; a++){
+                                tempPath[a].x = path[a].x;
+                                tempPath[a].y = path[a].y;
+                        }
+			tempPath[pS] = tempCoord;
+                        add->path = tempPath;
                         que_insert(que, add);
+			free(add);
+			//printf("pS = %d, capacity = %d", add->pathSize, add->capacity);
                 }
 		if(y != rows - 1 && maze[y + 1][x] == OPEN &&
                 visited[y + 1][x] != 1){
@@ -107,34 +130,47 @@ Coords* breadthFirst(int rows, int cols, int const maze[][cols], int visited[][c
                         add->pathSize = pS + 1;
 			tempCoord.x = x;
                         tempCoord.y = y + 1;
-                        path[pS] = tempCoord;
-                        add->path = path;
+			add->capacity = capacity + 1;
+                        tempPath = malloc(sizeof(Coords) * add->capacity);
+                        for(int a = 0; a < capacity; a++){
+                                tempPath[a].x = path[a].x;
+                                tempPath[a].y = path[a].y;
+                        }
+			tempPath[pS] = tempCoord;
+                        add->path = tempPath;
                         que_insert(que, add);
+			free(add);
+			//printf("pS = %d, capacity = %d", add->pathSize, add->capacity);
                 }
+		free(path);
 	}
+	for(int a = 0; a < pS; a++)
+		printf("x %d, y %d\n", path[a].x, path[a].y);
 	*pathSizeRet = pS;
-	printf(" x = %d, y = %d\n pS = %d, capacity = %d, testpath = %zu\n", x, y, pS, capacity, path[2].y);
+	que_destroy(que);
 	return path;
 }
 
 void depthSearch(int rows, int cols, int maze[][cols], int visited[][cols],
 	 int x, int y, int *done){
-	//printf(" x = %d, y = %d, done = %d\n", x, y, *done);
-	//printf("maze = %d\n", maze[x][y]);
+	printf(" x = %d, y = %d, done = %d\n", x, y, *done);
+	printf("maze = %d\n", maze[x][y]);
 	printPrettyMaze(rows, cols, maze);
+	 printPrettyMaze(rows, cols, visited);
 	if(x == cols - 1 && y == rows - 1){
 		*done = 1;
 	}
 	else if(*done == 0){
 		visited[x][y] = 1;
-		if(x > 0 && visited[x - 1][y] != 1 && maze[x-1][y] != 1)
+		if(x > 0 && visited[x - 1][y] != 1 && maze[x-1][y] == 0)
 			depthSearch(rows, cols, maze, visited, x - 1, y, done);
-		if(y > 0 && visited[x][y - 1] != 1 && maze[x][y-1] != 1)
+		if(y > 0 && visited[x][y - 1] != 1 && maze[x][y-1] == 0)
 		        depthSearch(rows, cols, maze, visited, x, y - 1, done);
-		if(x < cols -1 && visited[x + 1][y] != 1 && maze[x + 1][y] != 1)
+		if(x < (rows -1) && visited[x + 1][y] != 1 && maze[x + 1][y] == 0)
 			depthSearch(rows, cols, maze, visited, x + 1, y, done);
-		if(y < rows -1 && visited[x][y + 1] != 1 && maze[x][y+1] != 1)
+		if(y < (cols -1) && visited[x][y + 1] != 1 && maze[x][y+1] == 0)
 			depthSearch(rows, cols, maze, visited, x, y + 1, done);
+		return;
 	}	
 }
 void getSizes(char* input, int size, int* rows, int* cols){
@@ -284,6 +320,8 @@ int main(int argc, char ** argv){
 	getSizes(file, size, &rows, &cols);
 	int maze[rows][cols];
 	convertArray(file, rows, cols, maze);
+	fclose(pfile);
+	free(file);
 	int visited[rows][cols];
 	printPrettyMaze(rows, cols, maze);
 	for( int a = 0; a < rows; a++)
