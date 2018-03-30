@@ -365,8 +365,9 @@ char* makeArray(FILE* pfile, int* size){
 }
 
 int main(int argc, char ** argv){
-	
+	// usage message
 	char* usage = "USAGE: \nmopsolver [-bspmh] [-i INFILE] [-o OUTFILE] \n\nOptions: \n-h Print this helpful message to stdout. \n-b Add borders and pretty print.  (Default off.) \n-s Print shortest solution steps. (Default off.) \n-m Print matrix after reading.    (Default off.) \n-p Print solution with path.      (Default off.) \n-i INFILE Read maze from INFILE.  (Default stdin.) \n-o OUTFILE Write maze to OUTFILE. (Default stdout.)\n";
+	// getopt flags
 	char* in = NULL;
 	char* out = NULL;
 	int opt;
@@ -398,6 +399,7 @@ int main(int argc, char ** argv){
 				p = 1;
 				break;
 	}
+	// determines the appropriate in and out streams
 	if(h == 1)
 		printf("%s", usage);
 	int size;
@@ -412,8 +414,8 @@ int main(int argc, char ** argv){
 	else
 		pfileOut = stdout;
 
+	// reads in and solves the given maze
 	char* file = makeArray(pfileIn, &size);
-	
 	int rows;
 	int cols;
 	getSizes(file, size, &rows, &cols);
@@ -429,10 +431,11 @@ int main(int argc, char ** argv){
 	depthSearch(rows, cols, maze, visited, 0, 0, &canComplete);
 	for( int a = 0; a < rows; a++)
 		for(int b = 0; b < cols; b++)
-			visited[a][b] = 0;
-	
+			visited[a][b] = 0;	
 	int pathSize;	
 	path = breadthFirst(rows, cols, maze, visited, &pathSize);
+	
+	//prints out the optional results
 	if(m == 1)
 		for(int a = 0; a < size; a++)
 			fprintf(pfileOut, "%c", file[a]);
