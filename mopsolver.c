@@ -22,8 +22,18 @@ typedef struct qnode{
 	Coords* path;
 } QNode;
 
-
-Coords* breadthFirst(int rows, int cols, int maze[][cols], int visited[][cols], int* pathSizeRet){
+/**
+* breadth first search that finds the length of the shorest path and returns
+* an array of the coordinate in the path.
+* 
+* @param rows, number of rows in maze
+* @param cols, number of cols in maze
+* @param maze, matrix representation of the maze
+* @param visited, matrix of visited nodes to avoid loops
+* @param pathSize, return param for shortest path size
+*/
+Coords* breadthFirst(int rows, int cols, int maze[][cols], int visited[][cols],
+	int* pathSizeRet){
 	QueueADT que = que_create(NULL);
 	QNode* start = malloc(sizeof(QNode));
 	start->current.x = 0;
@@ -142,11 +152,22 @@ Coords* breadthFirst(int rows, int cols, int maze[][cols], int visited[][cols], 
 		free(temp->path);
 		free(temp);
 	}
-	*pathSizeRet = pS;
+	*pathSizeRet = pS + 1;
 	que_destroy(que);
 	return path;
 }
 
+/**
+* Recursively searches the maze depth first in order to find out if the maze is solvable
+*
+* @param rows, number of rows in the maze
+* @param cols, number of cols in the maze
+* @paras maze, matrix representation of the maze
+* @param visited, matrix of already visited places
+* @param x, current col
+* @param y, current row
+* @param done, indicates if the end was found or not
+*/
 void depthSearch(int rows, int cols, int maze[][cols], int visited[][cols],
 	 int x, int y, int *done){
 	if(x == cols - 1 && y == rows - 1){
@@ -165,6 +186,16 @@ void depthSearch(int rows, int cols, int maze[][cols], int visited[][cols],
 		return;
 	}	
 }
+
+/**
+* takes in a string representation of the input and finds the rows and cols in
+* maze but does not create it.
+*
+* @param input, string of chars form the input file
+* @param size, length of string
+* @param rows, return param for number of rows
+* @param cols, return param for number of cols
+*/
 void getSizes(char* input, int size, int* rows, int* cols){
 	for(int a = 0; a < size; a++){
                 if(input[a] == '\n'){
@@ -179,6 +210,16 @@ void getSizes(char* input, int size, int* rows, int* cols){
         *rows = counter/(*cols);
 	return;
 }
+
+/**
+* takes in a string with all of the input data and creates a matrix that 
+* represents the maze.
+*
+* @param input, string of chars from the input file
+* @param rows, num rows in the maze
+* @param cols, num cols in the maze
+* @param ret, return matrix to have the maze saved to.
+*/
 void convertArray(char* input, int rows, int cols, int ret[][cols]){
 	int counter = 0;
 	for( int row = 0; row < rows; row++){
@@ -192,7 +233,6 @@ void convertArray(char* input, int rows, int cols, int ret[][cols]){
 			
 		}
 	}
-	printf("rows = %d, cols = %d\n", rows, cols);
 	for(int a = 0; a < rows; a++){
                for(int b = 0; b < cols; b++){
                          printf("%d ", ret[a][b]);
@@ -201,6 +241,14 @@ void convertArray(char* input, int rows, int cols, int ret[][cols]){
         }
 }
 
+/**
+* prints out the correctly formatted solution in the maze
+* 
+* @patam list of Coords in maze
+* @param rows rows of the maze
+* @param cols cols of the maze
+* @param pathSize length of the
+*/
 void printPrettySolution(Coords* trail, int rows, int cols, int pathSize){
 	printf("\n");
         for(int a = 0; a <= cols; a ++)
@@ -213,11 +261,11 @@ void printPrettySolution(Coords* trail, int rows, int cols, int pathSize){
                         printf(" ");
                 for(size_t col = 0; col < (size_t)cols; col++){
 			if(row == 0 && col == 0)
-				printf(" x");
+				printf(" +");
 			else
                         for(int a = 0; a < pathSize; a++){ 
 				if(trail[a].x == col && trail[a].y == row){
-					printf(" x");
+					printf(" +");
 					break;
 				}
 				if(a == pathSize - 1)
@@ -230,6 +278,13 @@ void printPrettySolution(Coords* trail, int rows, int cols, int pathSize){
         }
 }
 
+/**
+* prints out the correctly formatted maze
+* 
+* @param rows rows of the matrix
+* @param cols cols of the matrix
+* @param maze matrix representation of the maze
+*/
 void printPrettyMaze(int rows, int cols, int maze[][cols]){
 	printf("\n");
 	for(int a = 0; a <= cols; a ++)
@@ -255,6 +310,13 @@ void printPrettyMaze(int rows, int cols, int maze[][cols]){
 	printf("o\n");
 }
 
+/**
+* Creates an array from the input given and returns the array and its size
+*
+* @param size, return param for the size of the created array
+* @param pfile file to be read in
+* @return String with all data from file concatenated into it
+*/
 char* makeArray(FILE* pfile, int* size){
 	char character;
 	char* ret = malloc(sizeof(char) * 10);
@@ -269,7 +331,6 @@ char* makeArray(FILE* pfile, int* size){
 			ret = realloc(ret, sizeof(char)* space + 10);
 			space = space + 10;
 		}
-		printf("%d   %c\n", count, character);
 	}
 	*size = count;
 	return ret;
