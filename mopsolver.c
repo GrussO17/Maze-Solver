@@ -4,6 +4,7 @@
 ///
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "queueADT.h"
 #define OPEN 0
@@ -249,33 +250,40 @@ void convertArray(char* input, int rows, int cols, int ret[][cols]){
 * @param cols cols of the maze
 * @param pathSize length of the
 */
-void printPrettySolution(Coords* trail, int rows, int cols, int pathSize){
-	printf("\n");
+void printPrettySolution(FILE* out, Coords* trail, int rows, int cols, int maze[][cols], int pathSize){
+	fprintf(out, "\n");
         for(int a = 0; a <= cols; a ++)
-                printf("oo");
-        printf("o\n");
+                fprintf(out, "oo");
+        fprintf(out, "o\n");
 	for(size_t row = 0; row < (size_t)rows; row++){
                 if(row != 0)
-                        printf("o");
+                        fprintf(out, "o");
                 else
-                        printf(" ");
+                        fprintf(out, " ");
                 for(size_t col = 0; col < (size_t)cols; col++){
 			if(row == 0 && col == 0)
-				printf(" +");
+				fprintf(out, " +");
 			else
                         for(int a = 0; a < pathSize; a++){ 
 				if(trail[a].x == col && trail[a].y == row){
-					printf(" +");
+					fprintf(out, " +");
 					break;
 				}
-				if(a == pathSize - 1)
-					printf("  ");
+				if(a == pathSize - 1){
+					if( maze[row][col] == 1)
+						fprintf(out, " o");
+					else
+						fprintf(out, "  ");
+				}
 			}
                 }
                 if(row != (size_t)rows - 1)
-                        printf(" o");
-                printf("\n");
+                        fprintf(out, " o");
+                fprintf(out,"\n");
         }
+	for(int a = 0; a <= cols; a ++)
+                fprintf(out, "oo");
+        fprintf(out, "o\n");
 }
 
 /**
@@ -285,29 +293,29 @@ void printPrettySolution(Coords* trail, int rows, int cols, int pathSize){
 * @param cols cols of the matrix
 * @param maze matrix representation of the maze
 */
-void printPrettyMaze(int rows, int cols, int maze[][cols]){
-	printf("\n");
+void printPrettyMaze(FILE* out, int rows, int cols, int maze[][cols]){
+	fprintf(out, "\n");
 	for(int a = 0; a <= cols; a ++)
-		printf("oo");
-	printf("o\n");
+		fprintf(out, "oo");
+	fprintf(out, "o\n");
 	for(int row = 0; row < rows; row++){
 		if(row != 0)
-			printf("o");
+			fprintf(out, "o");
 		else
-			printf(" ");
+			fprintf(out, " ");
 		for(int col = 0; col < cols; col++){
 			if( maze[row][col] == 1)
-				printf(" %d", maze[row][col]);
+				fprintf(out, " %d", maze[row][col]);
 			else
-				printf("  ");
+				fprintf(out, "  ");
 		}	
 		if(row != rows - 1)
-			printf(" o");
-		printf("\n");
+			fprintf(out, " o");
+		fprintf(out, "\n");
 	}
 	for(int a = 0; a <= cols; a ++)
-                printf("oo");
-	printf("o\n");
+                fprintf(out, "oo");
+	fprintf(out, "o\n");
 }
 
 /**
@@ -337,62 +345,75 @@ char* makeArray(FILE* pfile, int* size){
 }
 
 int main(int argc, char ** argv){
-	/**
 	char* usage = "USAGE: \nmopsolver [-bspmh] [-i INFILE] [-o OUTFILE] \n\n\Options: \n-h Print this helpful message to stdout. \n-b Add borders and pretty print.  (Default off.) \n-s Print shortest solution steps. (Default off.) \n-m Print matrix after reading.    (Default off.) \n-p Print solution with path.      (Default off.) \n-i INFILE Read maze from INFILE.  (Default stdin.) \n-o OUTFILE Write maze to OUTFILE. (Default stdout.)\n";
-	FILE* in = stdin;
-	FILE* out = stdout;
+	char* in = NULL;
+	char* out = NULL;
 	int opt;
-	int b, s, m, p = 0;
+	extern char* optarg;
+	int i = 0, o = 0, b = 0, s = 0, m = 0, p = 0, h = 0;
 	while((opt = getopt ( argc, argv, "i:o:bspmh")) != -1)
 		switch(opt){
 			case 'i':
 				in = optarg;
+				i = 1;
 			case 'o':
 				out = optarg;
+				o = 1;
 			case 'b':
 				b = 1;
 			case 'h':
-				printf("%s" usage);
-				return EXIT_SUCCESS;
+				h = 1;
 			case 's':
 				s = 1;
 			case 'm':
 				m = 1;
 			case 'p': 
 				p = 1;
-	}*/
+	}
+	if(h == 1)
+		printf("%s", usage);
 	int size;
-	printf("%s", argv[2]);
-	FILE* pfile = fopen(argv[1], "r");
-	char* file = makeArray(pfile, &size);
-	for(int a = 0; a < size; a++)
-		printf("%c", file[a]);
+	FILE* pfileIn;
+	FILE* pfileOut;
+	if( i == 1)
+		pfileIn = fopen(in, "r");
+	else
+		pfileIn = stdin;
+	if( o == 1)
+		pfileOut = fopen(out, "r");
+	else
+		pfileOut = stdout;
+
+	char* file = makeArray(pfileIn, &size);
+	
 	int rows;
 	int cols;
 	getSizes(file, size, &rows, &cols);
 	int maze[rows][cols];
 	convertArray(file, rows, cols, maze);
-	fclose(pfile);
 	free(file);
 	int visited[rows][cols];
-	printPrettyMaze(rows, cols, maze);
 	for( int a = 0; a < rows; a++)
                 for(int b = 0; b < cols; b++)
                         visited[a][b] = 0;
         int canComplete = 0;
 	Coords* path;
 	depthSearch(rows, cols, maze, visited, 0, 0, &canComplete);
-	printPrettyMaze(rows, cols, maze);
-	printf("depth Check %d\n", canComplete);
 	for( int a = 0; a < rows; a++)
 		for(int b = 0; b < cols; b++)
 			visited[a][b] = 0;
 	
-	
-	path = breadthFirst(rows, cols, maze, visited, &canComplete);	
-	printf("%d", canComplete);
-	printPrettyMaze(rows, cols, maze);
-	printPrettySolution(path, rows, cols, canComplete);
+	int pathSize;	
+	path = breadthFirst(rows, cols, maze, visited, &pathSize);
+	if(m == 1)
+		for(int a = 0; a < size; a++)
+			fprintf(pfileOut, "%c", file[a]);
+	if(s == 1)
+		fprintf(pfileOut, "Solution in %d steps.", pathSize);
+	if(b == 1)
+		printPrettyMaze(pfileOut, rows, cols, maze);
+	if(p == 1)
+		printPrettySolution(pfileOut, path, rows, cols, maze, pathSize);
 	free(path);
 	return EXIT_SUCCESS;
 }
