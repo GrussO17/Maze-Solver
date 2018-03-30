@@ -64,8 +64,8 @@ Coords* breadthFirst(int rows, int cols, int maze[][cols], int visited[][cols],
 	//declares the necessary temp variables necessary fot he breath first
 	//search
 	QNode* temp;
-	int x;
-	int y;
+	int x = 0;
+	int y = 0;
 	int pS;
 	int capacity;
 	QNode* add;
@@ -434,8 +434,12 @@ int main(int argc, char ** argv){
 			visited[a][b] = 0;	
 	int pathSize;	
 	path = breadthFirst(rows, cols, maze, visited, &pathSize);
-	
+		
 	//prints out the optional results
+	if(i == 1)
+		fclose(pfileIn);
+	if(o == 1)
+		fclose(pfileOut);
 	if(m == 1)
 		for(int a = 0; a < size; a++)
 			fprintf(pfileOut, "%c", file[a]);
