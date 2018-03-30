@@ -10,12 +10,25 @@
 #define OPEN 0
 #define WALL 1
 
-
+/**
+* Struct Coords holds the x and y coordinates of a node
+* 
+* @field x coordinate
+* @filed y coordinate
+*/
 typedef struct coords_s {
         size_t x;
         size_t y;
 } Coords;
 
+/**
+* Struct QNode is a node for the queue representing a place in the maze
+*
+* @field pathSize holds the size of the current path
+* @field capacity of the path array
+* @field current place in the maze
+* @field path array holding the current path
+*/
 typedef struct qnode{
 	int pathSize;
 	int capacity;
@@ -35,7 +48,9 @@ typedef struct qnode{
 */
 Coords* breadthFirst(int rows, int cols, int maze[][cols], int visited[][cols],
 	int* pathSizeRet){
+	//mallocs the queue
 	QueueADT que = que_create(NULL);
+	//creates the starting point of the maze and adds it to the queue
 	QNode* start = malloc(sizeof(QNode));
 	start->current.x = 0;
 	start->current.y = 0;
@@ -46,21 +61,22 @@ Coords* breadthFirst(int rows, int cols, int maze[][cols], int visited[][cols],
 	start->capacity = 1;
 	visited[0][0] = 1;
 	que_insert(que, start);
+	//declares the necessary temp variables necessary fot he breath first
+	//search
 	QNode* temp;
-	int x = start->current.x;
-	int y = start->current.y;
+	int x;
+	int y;
 	int pS;
 	int capacity;
 	QNode* add;
 	Coords* path;
 	Coords tempCoord;
 	Coords* tempPath;
-	printf("COLS = %d, ROWS = %d\n", cols, rows);
+	//main search loop
 	while(x < cols - 1 ||  y < rows - 1){
 		if(!que_empty(que))
 			temp = que_remove(que);
 		else{
-			printf("no solution");
 			return NULL;
 		}
 		x = (int)temp->current.x;
@@ -69,6 +85,8 @@ Coords* breadthFirst(int rows, int cols, int maze[][cols], int visited[][cols],
 		capacity = temp->capacity;
 		path = temp->path;
 		free(temp);
+		//checks if the position to the lect the current node is a 
+		//valid move and adds it to the que
 		if(x != 0 && maze[y][x - 1] == OPEN && 
 		visited[y][x - 1] != 1){
 			visited[y][x - 1] = 1;
@@ -88,6 +106,8 @@ Coords* breadthFirst(int rows, int cols, int maze[][cols], int visited[][cols],
 			add->path = tempPath;
 			que_insert(que, add);
 		}
+		//checks if the position to the right of the current node is a 
+		//valid move and adds it to the que
 		if(x != cols - 1 && maze[y][x + 1] == OPEN && 
 		visited[y][x + 1] != 1){
 			visited[y][x + 1] = 1;
@@ -107,6 +127,8 @@ Coords* breadthFirst(int rows, int cols, int maze[][cols], int visited[][cols],
                         add->pathSize = pS + 1;
                         que_insert(que, add);
  		}
+		//checks if the position above the current node is a valid 
+                //move and adds it to the que
 		if(y != 0 && maze[y - 1][x] == OPEN &&
                 visited[y - 1][x] != 1){
                         visited[y - 1][x] = 1;
@@ -126,6 +148,8 @@ Coords* breadthFirst(int rows, int cols, int maze[][cols], int visited[][cols],
                         add->path = tempPath;
                         que_insert(que, add);
                 }
+		//checks if the position below the current node is a valid 
+		//move and adds it to the que
 		if(y != rows - 1 && maze[y + 1][x] == OPEN &&
                 visited[y + 1][x] != 1){
                         visited[y + 1][x] = 1;
@@ -145,9 +169,11 @@ Coords* breadthFirst(int rows, int cols, int maze[][cols], int visited[][cols],
                         add->path = tempPath;
                         que_insert(que, add);
                 }
+		//frees the current path unless it is the solution
 		if(x < cols - 1 ||  y < rows - 1)
 			free(path);
 	}
+	//cleans up the leftovers in the que when the solution is found.
 	while(!que_empty(que)){
 		temp = que_remove(que);
 		free(temp->path);
@@ -234,12 +260,6 @@ void convertArray(char* input, int rows, int cols, int ret[][cols]){
 			
 		}
 	}
-	for(int a = 0; a < rows; a++){
-               for(int b = 0; b < cols; b++){
-                         printf("%d ", ret[a][b]);
-                }
-                printf("\n");
-        }
 }
 
 /**
@@ -345,7 +365,8 @@ char* makeArray(FILE* pfile, int* size){
 }
 
 int main(int argc, char ** argv){
-	char* usage = "USAGE: \nmopsolver [-bspmh] [-i INFILE] [-o OUTFILE] \n\n\Options: \n-h Print this helpful message to stdout. \n-b Add borders and pretty print.  (Default off.) \n-s Print shortest solution steps. (Default off.) \n-m Print matrix after reading.    (Default off.) \n-p Print solution with path.      (Default off.) \n-i INFILE Read maze from INFILE.  (Default stdin.) \n-o OUTFILE Write maze to OUTFILE. (Default stdout.)\n";
+	
+	char* usage = "USAGE: \nmopsolver [-bspmh] [-i INFILE] [-o OUTFILE] \n\nOptions: \n-h Print this helpful message to stdout. \n-b Add borders and pretty print.  (Default off.) \n-s Print shortest solution steps. (Default off.) \n-m Print matrix after reading.    (Default off.) \n-p Print solution with path.      (Default off.) \n-i INFILE Read maze from INFILE.  (Default stdin.) \n-o OUTFILE Write maze to OUTFILE. (Default stdout.)\n";
 	char* in = NULL;
 	char* out = NULL;
 	int opt;
@@ -356,19 +377,26 @@ int main(int argc, char ** argv){
 			case 'i':
 				in = optarg;
 				i = 1;
+				break;
 			case 'o':
 				out = optarg;
 				o = 1;
+				break;
 			case 'b':
 				b = 1;
+				break;
 			case 'h':
 				h = 1;
+				break;
 			case 's':
 				s = 1;
+				break;
 			case 'm':
 				m = 1;
+				break;
 			case 'p': 
 				p = 1;
+				break;
 	}
 	if(h == 1)
 		printf("%s", usage);
